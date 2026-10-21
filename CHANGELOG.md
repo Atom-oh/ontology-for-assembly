@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — 온톨로지 브로셔 (GitHub Pages) (2026-10-21)
+- `brochure/` 단일 페이지 브로셔(index.html) — 온톨로지 세션용. 31 클래스 · 7 real 엣지 타입 · 74,249 엣지(`docs/data-sources.md` 적재 결과 기준).
+- `brochure/ontology-relations.svg` — 국회 OpenAPI 필드(`MONA_CD`·`RST_MONA_CD`·`PUBL_MONA_CD`·`POLY_NM`·`CMIT_NM`·`COMMITTEE`·표결정보) → 매핑 규칙(KEY·DIRECT·LEAD·SPLIT·JOIN·DERIVE) → Neptune 엣지 형성 다이어그램.
+- `brochure/assembly-arch.svg` — CDK 기준 AWS 아키텍처(CloudFront → VPC origin → internal ALB → Fargate, 중앙 Neptune Ontology layer). `hero-graph.svg`(익명 공동발의 네트워크 예시) 포함 3개 SVG는 `brochure/_build/gen_diagrams.py`로 생성.
+- 스크린샷은 real 엣지 기반 화면(O·T·Object Explorer)만 사용하고 합성 지표는 가림 처리.
+- `.github/workflows/pages.yml` — `brochure/**` 변경 시 GitHub Pages 배포.
+- EN: Added a single-page ontology brochure with an OpenAPI-field → edge formation diagram and an architecture diagram, deployed via GitHub Pages.
+
 ### Fixed — 챗봇: 의원 "유사/투표성향 비슷" 질문이 활동 이력만 반복 (2026-06-16)
 - 챗(시나리오 B) Stage 2/3가 쿼리에서 의원 이름을 감지하면 **intent와 무관하게 항상 journey(의정활동 이력)** 컨텍스트를 세팅 → "이해민과 투표성향 비슷한 의원은?" 질문에도 활동 이력만 반복 출력.
 - `three_stage.stage2_agent` + `multi_agent.run_agentic_pipeline`에 **유사-의원 intent**("비슷·유사·닮은·투표성향·룩어라이크·lookalike·similar") 분기 추가 → `lookalike_builder`(시나리오 F, cluster+활동근접+cross-party)로 유사 의원 top-5 반환 + `bedrock` mock 렌더 분기. 순수 활동이력 질문은 journey 유지. (사용자 신고 2026-06-16, 검증: 이해민→김도읍 0.98·어기구 0.95 등.)
