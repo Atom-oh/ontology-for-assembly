@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 56 520 464" width="520" height="464" role="img" aria-labelledby="ht"><title id="ht">공동발의 네트워크 개념도 (예시)</title>
+<rect x="0" y="0" width="520" height="520" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1" />
+<line x1="216.9" y1="183.3" x2="237.4" y2="230.0" stroke="#6B665A" stroke-width="3.05" opacity="0.60" />
+<line x1="216.9" y1="183.3" x2="109.9" y2="132.4" stroke="#6B665A" stroke-width="2.15" opacity="0.50" />
+<line x1="216.9" y1="183.3" x2="160.4" y2="103.3" stroke="#6B665A" stroke-width="3.50" opacity="0.65" />
+<line x1="216.9" y1="183.3" x2="222.8" y2="98.9" stroke="#6B665A" stroke-width="1.25" opacity="0.40" />
+<line x1="237.4" y1="230.0" x2="156.2" y2="227.4" stroke="#6B665A" stroke-width="1.70" opacity="0.45" />
+<line x1="237.4" y1="230.0" x2="109.9" y2="132.4" stroke="#6B665A" stroke-width="1.25" opacity="0.40" />
+<line x1="237.4" y1="230.0" x2="222.8" y2="98.9" stroke="#6B665A" stroke-width="3.50" opacity="0.65" />
+<line x1="237.4" y1="230.0" x2="293.1" y2="321.1" stroke="#C2410C" stroke-width="1.25" opacity="0.40" stroke-dasharray="5 4"/>
+<line x1="156.2" y1="227.4" x2="248.5" y2="477.2" stroke="#C2410C" stroke-width="2.15" opacity="0.50" stroke-dasharray="5 4"/>
+<line x1="96.8" y1="194.7" x2="222.8" y2="98.9" stroke="#6B665A" stroke-width="1.70" opacity="0.45" />
+<line x1="109.9" y1="132.4" x2="222.8" y2="98.9" stroke="#6B665A" stroke-width="3.95" opacity="0.70" />
+<line x1="109.9" y1="132.4" x2="369.5" y2="102.4" stroke="#C2410C" stroke-width="2.15" opacity="0.50" stroke-dasharray="5 4"/>
+<line x1="160.4" y1="103.3" x2="306.0" y2="144.0" stroke="#C2410C" stroke-width="1.70" opacity="0.45" stroke-dasharray="5 4"/>
+<line x1="464.1" y1="198.7" x2="399.2" y2="235.7" stroke="#6B665A" stroke-width="4.85" opacity="0.80" />
+<line x1="464.1" y1="198.7" x2="338.1" y2="262.4" stroke="#6B665A" stroke-width="4.85" opacity="0.80" />
+<line x1="464.1" y1="198.7" x2="369.5" y2="102.4" stroke="#6B665A" stroke-width="4.85" opacity="0.80" />
+<line x1="464.1" y1="198.7" x2="431.3" y2="141.7" stroke="#6B665A" stroke-width="3.95" opacity="0.70" />
+<line x1="399.2" y1="235.7" x2="318.0" y2="221.4" stroke="#6B665A" stroke-width="1.25" opacity="0.40" />
+<line x1="399.2" y1="235.7" x2="431.3" y2="141.7" stroke="#6B665A" stroke-width="4.85" opacity="0.80" />
+<line x1="399.2" y1="235.7" x2="248.5" y2="477.2" stroke="#C2410C" stroke-width="1.70" opacity="0.45" stroke-dasharray="5 4"/>
+<line x1="399.2" y1="235.7" x2="173.3" y2="366.0" stroke="#C2410C" stroke-width="2.15" opacity="0.50" stroke-dasharray="5 4"/>
+<line x1="338.1" y1="262.4" x2="306.0" y2="144.0" stroke="#6B665A" stroke-width="1.70" opacity="0.45" />
+<line x1="338.1" y1="262.4" x2="431.3" y2="141.7" stroke="#6B665A" stroke-width="3.05" opacity="0.60" />
+<line x1="306.0" y1="144.0" x2="369.5" y2="102.4" stroke="#6B665A" stroke-width="1.25" opacity="0.40" />
+<line x1="369.5" y1="102.4" x2="431.3" y2="141.7" stroke="#6B665A" stroke-width="3.95" opacity="0.70" />
+<line x1="369.5" y1="102.4" x2="251.5" y2="330.1" stroke="#C2410C" stroke-width="1.70" opacity="0.45" stroke-dasharray="5 4"/>
+<line x1="431.3" y1="141.7" x2="251.5" y2="330.1" stroke="#C2410C" stroke-width="1.25" opacity="0.40" stroke-dasharray="5 4"/>
+<line x1="339.8" y1="397.9" x2="328.5" y2="457.3" stroke="#6B665A" stroke-width="4.40" opacity="0.75" />
+<line x1="339.8" y1="397.9" x2="248.5" y2="477.2" stroke="#6B665A" stroke-width="2.15" opacity="0.50" />
+<line x1="339.8" y1="397.9" x2="173.3" y2="366.0" stroke="#6B665A" stroke-width="3.50" opacity="0.65" />
+<line x1="339.8" y1="397.9" x2="251.5" y2="330.1" stroke="#6B665A" stroke-width="2.15" opacity="0.50" />
+<line x1="328.5" y1="457.3" x2="251.5" y2="330.1" stroke="#6B665A" stroke-width="4.40" opacity="0.75" />
+<line x1="248.5" y1="477.2" x2="173.3" y2="366.0" stroke="#6B665A" stroke-width="3.05" opacity="0.60" />
+<line x1="180.1" y1="408.0" x2="173.3" y2="366.0" stroke="#6B665A" stroke-width="4.40" opacity="0.75" />
+<line x1="180.1" y1="408.0" x2="293.1" y2="321.1" stroke="#6B665A" stroke-width="4.40" opacity="0.75" />
+<line x1="173.3" y1="366.0" x2="293.1" y2="321.1" stroke="#6B665A" stroke-width="2.15" opacity="0.50" />
+<line x1="251.5" y1="330.1" x2="293.1" y2="321.1" stroke="#6B665A" stroke-width="2.15" opacity="0.50" />
+<circle cx="216.9" cy="183.3" r="13.8" fill="#EAF1F7" stroke="#1F5F8B" stroke-width="2"/>
+<circle cx="237.4" cy="230.0" r="13.8" fill="#EAF1F7" stroke="#1F5F8B" stroke-width="2"/>
+<circle cx="156.2" cy="227.4" r="9.2" fill="#EAF1F7" stroke="#1F5F8B" stroke-width="2"/>
+<circle cx="96.8" cy="194.7" r="7.9" fill="#EAF1F7" stroke="#1F5F8B" stroke-width="2"/>
+<circle cx="109.9" cy="132.4" r="13.3" fill="#EAF1F7" stroke="#1F5F8B" stroke-width="2"/>
+<circle cx="160.4" cy="103.3" r="10.6" fill="#EAF1F7" stroke="#1F5F8B" stroke-width="2"/>
+<circle cx="222.8" cy="98.9" r="14.2" fill="#EAF1F7" stroke="#1F5F8B" stroke-width="2"/>
+<circle cx="464.1" cy="198.7" r="22.3" fill="#DCE8F2" stroke="#4F86AD" stroke-width="2"/>
+<circle cx="399.2" cy="235.7" r="17.8" fill="#DCE8F2" stroke="#4F86AD" stroke-width="2"/>
+<circle cx="338.1" cy="262.4" r="14.2" fill="#DCE8F2" stroke="#4F86AD" stroke-width="2"/>
+<circle cx="318.0" cy="221.4" r="7.5" fill="#DCE8F2" stroke="#4F86AD" stroke-width="2"/>
+<circle cx="306.0" cy="144.0" r="9.2" fill="#DCE8F2" stroke="#4F86AD" stroke-width="2"/>
+<circle cx="369.5" cy="102.4" r="16.9" fill="#DCE8F2" stroke="#4F86AD" stroke-width="2"/>
+<circle cx="431.3" cy="141.7" r="20.1" fill="#DCE8F2" stroke="#4F86AD" stroke-width="2"/>
+<circle cx="339.8" cy="397.9" r="16.0" fill="#F4F8FB" stroke="#7FA6C4" stroke-width="2"/>
+<circle cx="328.5" cy="457.3" r="14.2" fill="#F4F8FB" stroke="#7FA6C4" stroke-width="2"/>
+<circle cx="248.5" cy="477.2" r="12.9" fill="#F4F8FB" stroke="#7FA6C4" stroke-width="2"/>
+<circle cx="180.1" cy="408.0" r="14.2" fill="#F4F8FB" stroke="#7FA6C4" stroke-width="2"/>
+<circle cx="173.3" cy="366.0" r="18.2" fill="#F4F8FB" stroke="#7FA6C4" stroke-width="2"/>
+<circle cx="251.5" cy="330.1" r="14.7" fill="#F4F8FB" stroke="#7FA6C4" stroke-width="2"/>
+<circle cx="293.1" cy="321.1" r="13.8" fill="#F4F8FB" stroke="#7FA6C4" stroke-width="2"/>
+<text x="20" y="494" font-family="'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans Mono CJK KR','Noto Sans CJK KR',monospace" font-size="15" font-weight="700" fill="#C2410C" text-anchor="start" >CO_PROPOSED_WITH {count}</text>
+<text x="500" y="494" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR','Noto Sans CJK KR',sans-serif" font-size="14" font-weight="400" fill="#6B665A" text-anchor="end" >예시 · 익명</text>
+</svg>

@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>ontology·assembly — 국회 데이터를 관계로 읽는 지식그래프</title>
+<meta name="description" content="국회 열린데이터광장 OpenAPI의 의원·의안·표결·위원회·정당을 31 클래스 온톨로지로 모델링하고, OpenAPI 필드에서 7종 관계를 만들어 Amazon Neptune 지식그래프로 탐색하는 언론사용 Agentic AI 데모." />
+<meta property="og:title" content="ontology·assembly — 국회 데이터를 관계로 읽는다" />
+<meta property="og:description" content="31 클래스 온톨로지 · 7종 real 관계 · Amazon Neptune + OpenSearch + Bedrock. OpenAPI 필드가 어떻게 관계가 되는지 한 장으로." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://atom-oh.github.io/ontology-for-assembly/" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2317476A'/%3E%3Ccircle cx='10' cy='11' r='4' fill='%23fff'/%3E%3Ccircle cx='22' cy='11' r='4' fill='%23fff'/%3E%3Ccircle cx='16' cy='23' r='4' fill='%23F2B27A'/%3E%3Cpath d='M10 11L22 11M10 11L16 23M22 11L16 23' stroke='%23fff' stroke-width='1.6'/%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
+<style>
+  :root{
+    /* one accent: assembly blue (real data / ontology) + a derived-edge signal color */
+    --acc-50:#EAF1F7; --acc-100:#D3E2EE; --acc-200:#A9C6DC; --acc-500:#1F5F8B; --acc-600:#195077; --acc-700:#17476A;
+    --derive:#C2410C; --derive-50:#FFF4EC;
+    --ext:#B7791F; --ext-50:#FBF3E4; --syn:#8A8474;
+    --ink-50:#F7F6F2; --ink-100:#EDEBE4; --ink-200:#D7D3C7; --ink-400:#8A8474;
+    --ink-500:#5F5A4D; --ink-800:#1F1E1D; --ink-900:#14130F;
+    --paper:#FAF9F5; --paper-muted:#F3F1EB; --white:#FFFFFF;
+
+    --bg:var(--paper); --surface:var(--white); --sunken:var(--paper-muted);
+    --text:var(--ink-800); --text-2:var(--ink-500);
+    --text-3:#6B665A; /* muted, AA on paper */
+    --line:var(--ink-100); --line-2:var(--ink-200);
+    --brand:var(--acc-500); --brand-ink:var(--acc-700);
+
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic",monospace;
+    --shadow-card:0 1px 2px rgba(31,30,29,.04), 0 8px 28px rgba(31,30,29,.06);
+    --shadow-pop:0 10px 40px rgba(31,30,29,.14);
+    --maxw:1180px; --r:16px;
+  }
+  *{box-sizing:border-box}
+  :focus-visible{outline:2px solid var(--brand-ink); outline-offset:3px; border-radius:4px}
+  .skip-link{position:absolute; left:12px; top:-48px; z-index:200; background:var(--ink-900); color:var(--paper);
+    padding:10px 16px; border-radius:10px; font-size:14px; font-weight:600; transition:top .18s}
+  .skip-link:focus{top:12px}
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+  html{scroll-behavior:smooth; -webkit-text-size-adjust:100%}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
+    font-size:17px; line-height:1.65; -webkit-font-smoothing:antialiased; overflow-x:hidden; word-break:keep-all}
+  .num{font-variant-numeric:tabular-nums lining-nums}
+  a{color:inherit; text-decoration:none}
+  img,svg{display:block}
+  code,.mono{font-family:var(--mono)}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+
+  /* nav */
+  .nav{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.4) blur(10px);
+    background:color-mix(in srgb, var(--paper) 84%, transparent); border-bottom:1px solid var(--line)}
+  .nav-in{display:flex; align-items:center; gap:24px; height:62px}
+  .brand{display:flex; align-items:center; gap:10px}
+  .brand b{font-family:var(--serif); font-weight:600; font-size:20px; letter-spacing:-.02em}
+  .brand b i{font-style:normal; color:var(--brand)}
+  .nav-links{margin-left:auto; display:flex; gap:24px; align-items:center}
+  .nav-links a{font-size:14.5px; color:var(--text-2); transition:color .2s}
+  .nav-links a:hover{color:var(--brand-ink)}
+  .nav-cta{font-size:14px; font-weight:600; color:var(--white)!important; background:var(--ink-800);
+    padding:9px 16px; border-radius:99px; transition:transform .2s, background .2s}
+  .nav-cta:hover{background:var(--acc-700); transform:translateY(-1px)}
+  @media (max-width:900px){ .nav-links a:not(.nav-cta){display:none} }
+
+  /* hero */
+  .hero{padding:80px 0 56px; overflow:hidden}
+  .hero-grid{display:grid; grid-template-columns:1.02fr .98fr; gap:48px; align-items:center}
+  .eyebrow{display:inline-flex; align-items:center; gap:9px; font-family:var(--mono); font-size:12.5px;
+    letter-spacing:.03em; color:var(--brand-ink); background:var(--acc-50); border:1px solid var(--acc-100);
+    padding:6px 13px; border-radius:99px; margin-bottom:24px}
+  .eyebrow .dot{width:7px; height:7px; border-radius:99px; background:var(--brand); animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,95,139,.45)}70%{box-shadow:0 0 0 9px rgba(31,95,139,0)}100%{box-shadow:0 0 0 0 rgba(31,95,139,0)}}
+  h1.hero-title{font-weight:800; font-size:clamp(36px,5.4vw,60px); line-height:1.08; letter-spacing:-.035em; margin:0 0 22px; text-wrap:balance}
+  h1.hero-title em{font-style:normal; color:var(--brand); position:relative}
+  h1.hero-title em::after{content:""; position:absolute; left:0; right:0; bottom:.06em; height:.16em; background:var(--acc-100); z-index:-1; border-radius:3px}
+  .hero-sub{font-size:clamp(16px,1.6vw,18.5px); color:var(--text-2); max-width:54ch; margin:0 0 28px; text-wrap:pretty}
+  .hero-actions{display:flex; flex-wrap:wrap; gap:14px; align-items:center}
+  .btn{display:inline-flex; align-items:center; justify-content:center; min-height:44px; font-weight:600; font-size:15px;
+    padding:12px 22px; border-radius:99px; cursor:pointer; border:1px solid transparent;
+    transition:transform .2s, box-shadow .2s, background .2s, border-color .2s}
+  .btn-primary{background:var(--brand); color:var(--white); font-weight:700; box-shadow:0 6px 20px rgba(31,95,139,.28)}
+  .btn-primary:hover{transform:translateY(-2px); background:var(--acc-600)}
+  .btn-ghost{background:var(--surface); color:var(--text); border-color:var(--line-2)}
+  .btn-ghost:hover{border-color:var(--ink-400); transform:translateY(-2px)}
+  .metrics{display:grid; grid-template-columns:repeat(3,1fr); gap:20px 16px; margin-top:36px; padding-top:28px; border-top:1px solid var(--line)}
+  .metric .v{font-family:var(--serif); font-weight:600; font-size:32px; letter-spacing:-.02em; line-height:1}
+  .metric .l{font-size:13px; color:var(--text-3); margin-top:7px}
+  .hero-fig{margin:0 auto; max-width:440px; width:100%; background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:14px; box-shadow:var(--shadow-pop)}
+  .hero-fig img{width:100%; height:auto}
+  .hero-fig figcaption{font-size:13px; color:var(--text-3); padding:8px 4px 0; text-align:center}
+
+  /* sections */
+  .sec{padding:76px 0}
+  .sec.alt{background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+  .sec-head{max-width:none; margin-bottom:40px}
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--brand-ink); margin-bottom:14px}
+  h2{font-weight:800; font-size:clamp(27px,3.4vw,40px); letter-spacing:-.03em; line-height:1.15; margin:0 0 16px; text-wrap:balance}
+  h2 em{font-style:normal; color:var(--brand)}
+  h3{letter-spacing:-.02em}
+  .sec-head p{font-size:17px; color:var(--text-2); margin:0; text-wrap:pretty}
+
+  /* problem → pillars */
+  .qa{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px}
+  .q{background:var(--sunken); border-radius:12px; padding:16px 18px; font-size:15px; color:var(--text-2)}
+  .q b{display:block; color:var(--text); font-size:15.5px; margin-bottom:4px}
+  .pillars{display:grid; grid-template-columns:repeat(3,1fr); gap:20px}
+  .pillar{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:28px; box-shadow:var(--shadow-card)}
+  .pillar .pn{font-family:var(--mono); font-size:12px; color:var(--brand-ink); font-weight:600; letter-spacing:.04em}
+  .pillar h3{font-size:20px; font-weight:700; margin:10px 0 10px}
+  .pillar p{font-size:15px; color:var(--text-2); margin:0}
+  .pillar code{font-size:13px; background:var(--acc-50); color:var(--brand-ink); padding:1px 6px; border-radius:5px}
+  .stages{display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin-top:28px; border:1px solid var(--line); border-radius:var(--r); overflow:hidden; background:var(--surface)}
+  .stage{padding:20px 22px; border-right:1px solid var(--line); position:relative}
+  .stage:last-child{border-right:0; background:var(--acc-50)}
+  .stage .sn{font-family:var(--mono); font-size:12px; color:var(--text-3)}
+  .stage h3{font-size:16.5px; margin:4px 0 6px}
+  .stage p{font-size:14px; color:var(--text-2); margin:0}
+
+  /* ontology */
+  .fig{margin:0; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-card); padding:14px; overflow:hidden}
+  .fig img{display:block; width:100%; height:auto}
+  .fig-meta{display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 16px; margin-top:12px; font-size:13.5px; color:var(--text-3)}
+  .fig-meta a{color:var(--brand-ink); font-weight:600; border-bottom:1px solid var(--acc-200)}
+  .rot-hint{display:none}
+  .rules{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:36px 0 18px}
+  .rule{border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:16px}
+  .rule .t{display:inline-block; font-family:var(--mono); font-size:12px; font-weight:700; color:#fff; background:var(--brand); padding:2px 8px; border-radius:5px}
+  .rule.d .t{background:var(--derive)}
+  .rule h3{font-size:15.5px; margin:10px 0 4px}
+  .rule p{font-size:13.5px; color:var(--text-2); margin:0}
+
+  table.edges{width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; font-size:15px}
+  .edges caption{text-align:left; font-size:13.5px; color:var(--text-3); padding:0 0 10px}
+  .edges th{font-family:var(--mono); font-size:12.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--text-3); font-weight:600; text-align:left; background:var(--sunken); padding:12px 16px}
+  .edges td{padding:13px 16px; border-top:1px solid var(--line); vertical-align:top; overflow-wrap:anywhere}
+  .edges td.name code{font-weight:700; color:var(--brand-ink); font-size:14px}
+  .edges tr.d td.name code{color:var(--derive)}
+  .edges td.dir{white-space:nowrap; color:var(--text-2)}
+  .edges td.src code{font-size:13px; background:var(--sunken); padding:1px 6px; border-radius:5px}
+  .edges td.count{text-align:right; white-space:nowrap; font-family:var(--mono); font-size:14px}
+  .edges td .lbl{display:none}
+
+  .example{display:grid; grid-template-columns:1fr auto 1fr; gap:18px; align-items:stretch; margin-top:36px}
+  .code{font-variant-ligatures:none; background:var(--ink-900); color:#E9E6DD; border-radius:14px; padding:18px 20px; font-family:var(--mono); font-size:13.5px; line-height:1.7; overflow-x:auto; margin:0}
+  .code .c{color:#9C978A} .code .k{color:#8EC5EE} .code .s{color:#F2B27A} .code .r{color:#FFAA80}
+  .code-h{font-size:13px; font-weight:700; color:var(--text-3); margin:0 0 8px; font-family:var(--mono)}
+  .example .arrow{display:grid; place-items:center; color:var(--brand); font-size:28px}
+  .example > div, .qcard{min-width:0} /* let <pre> scroll instead of widening the grid */
+
+  .classes{display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-top:36px}
+  .cg{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px}
+  .cg h3{font-size:14px; margin:0 0 8px}
+  .cg ul{list-style:none; margin:0; padding:0}
+  .cg li{font-family:var(--mono); font-size:12.5px; color:var(--text-2); display:flex; align-items:center; gap:7px; line-height:1.9}
+  .cg li{overflow-wrap:normal}
+  .cg li::before,.legend .m-syn{content:""; width:8px; height:8px; border-radius:99px; border:1.6px solid var(--syn); background:transparent; flex:none; box-sizing:border-box}
+  .cg li.real{color:var(--text); font-weight:700} .cg li.real::before,.legend .m-real{border:0; background:var(--brand)}
+  .cg li.ext::before,.legend .m-ext{border:0; background:var(--ext); border-radius:1px; transform:rotate(45deg)}
+  .legend{display:flex; flex-wrap:wrap; gap:8px 20px; font-size:13.5px; color:var(--text-2); margin-top:14px}
+  .legend span{display:inline-flex; align-items:center; gap:7px}
+  .legend i{width:9px; height:9px; border-radius:99px; display:inline-block; box-sizing:border-box}
+
+  .queries{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:20px}
+  .qcard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px; box-shadow:var(--shadow-card); display:flex; flex-direction:column}
+  .qcard h3{font-size:17px; margin:0 0 6px}
+  .qcard p{font-size:14px; color:var(--text-2); margin:0 0 14px}
+  .qcard .code{font-size:12.5px; margin-top:auto; white-space:pre-wrap; word-break:break-word}
+  .qcard .src{font-family:var(--mono); font-size:12px; color:var(--text-3); margin-top:10px}
+
+  /* scenarios */
+  .feat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+  .feat{background:var(--surface); padding:26px}
+  .feat .code-tag{font-family:var(--mono); font-size:12px; font-weight:700; color:var(--brand-ink); background:var(--acc-50); padding:2px 8px; border-radius:5px}
+  .feat h3{font-size:17px; font-weight:700; margin:12px 0 8px}
+  .feat p{font-size:14.5px; color:var(--text-2); margin:0; line-height:1.6}
+  .feat .uses{font-family:var(--mono); font-size:12px; color:var(--text-3); margin-top:12px; display:block}
+
+  /* shots */
+  .shots{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; align-items:start}
+  .shot{margin:0}
+  .shot.wide{grid-column:span 2}
+  .shot img{display:block; width:100%; height:auto; border-radius:12px; border:1px solid var(--line); box-shadow:var(--shadow-card); background:var(--ink-900)}
+  .shot figcaption{margin-top:9px; font-size:13.5px; color:var(--text-2)}
+  .shot figcaption b{color:var(--text)}
+
+  /* architecture */
+  .arch-notes{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:26px}
+  .an{border-top:2px solid var(--brand); padding-top:14px}
+  .an h3{font-size:15.5px; margin:0 0 6px}
+  .an p{font-size:14px; color:var(--text-2); margin:0}
+
+  /* trust */
+  .trust{display:grid; grid-template-columns:1.1fr .9fr; gap:28px}
+  .tlist{list-style:none; margin:0; padding:0; display:grid; gap:12px}
+  .tlist li{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px; font-size:15px; color:var(--text-2)}
+  .tlist li b{color:var(--text); display:block; margin-bottom:2px}
+  .stack{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:22px}
+  .stack h3{font-size:15px; margin:0 0 12px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{font-size:13px; padding:6px 11px; border-radius:99px; background:var(--sunken); color:var(--text-2); border:1px solid var(--line)}
+  .stack .row{margin-bottom:18px} .stack .row:last-child{margin-bottom:0}
+  .stack .rl{font-family:var(--mono); font-size:12px; color:var(--text-3); letter-spacing:.05em; text-transform:uppercase; margin-bottom:8px}
+
+  /* cta */
+  .cta{text-align:center; padding:84px 0 92px}
+  .cta h2{max-width:22ch; margin:0 auto 16px}
+  .cta p{max-width:56ch; margin:0 auto 28px; color:var(--text-2); text-wrap:pretty}
+  .cta .hero-actions{justify-content:center}
+  footer{border-top:1px solid var(--line); padding:28px 0 40px; font-size:13.5px; color:var(--text-3)}
+  footer .wrap{display:flex; flex-wrap:wrap; gap:8px 24px; justify-content:space-between}
+  footer a{border-bottom:1px solid var(--line-2)}
+
+  /* reveal */
+  .reveal{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease}
+  .reveal.in{opacity:1; transform:none}
+
+  /* ── tablet ── */
+  @media (max-width:1024px){
+    .hero-grid{grid-template-columns:1fr}
+    .pillars,.queries,.feat-grid,.shots{grid-template-columns:repeat(2,1fr)}
+    .qa{grid-template-columns:1fr}
+    .rules{grid-template-columns:repeat(3,1fr)}
+    .classes{grid-template-columns:repeat(4,1fr)}
+    .arch-notes{grid-template-columns:repeat(2,1fr)}
+    .trust{grid-template-columns:1fr}
+  }
+  /* ── mobile ── */
+  @media (max-width:640px){
+    body{font-size:16px}
+    .wrap{padding:0 18px}
+    .hero{padding:48px 0 40px}
+    .sec{padding:56px 0}
+    .metrics{grid-template-columns:repeat(2,1fr)}
+    .pillars,.queries,.feat-grid,.shots,.stages,.rules{grid-template-columns:1fr}
+    .stage{border-right:0; border-bottom:1px solid var(--line)}
+    .shot.wide{grid-column:span 1}
+    .classes{grid-template-columns:repeat(2,1fr)}
+    .arch-notes{grid-template-columns:1fr}
+    .example{grid-template-columns:1fr}
+    .example .arrow{transform:rotate(90deg)}
+    .hero-actions .btn{width:100%}
+
+    /* tables → stacked cards */
+    .edges thead{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+    table.edges, .edges tbody, .edges tr{display:block; width:100%}
+    .edges tr{border-top:1px solid var(--line); padding:14px 16px; position:relative}
+    .edges tr:first-child{border-top:0}
+    .edges td{display:block; border:0; padding:2px 0}
+    .edges td.name{padding-right:96px}
+    .edges td.count{position:absolute; top:14px; right:16px; text-align:right}
+    .edges td .lbl{display:inline; font-family:var(--mono); font-size:12px; color:var(--text-3); margin-right:6px}
+
+    /* landscape diagrams rotated 90° to fill the vertical screen */
+    .fig.rot{position:relative; padding:0}
+    .fig.rot img{position:absolute; top:50%; left:50%; max-width:none; height:auto; transform:translate(-50%,-50%) rotate(90deg)}
+    .fig.rot.onto{aspect-ratio:820 / 1440}
+    .fig.rot.onto img{width:calc((100vw - 36px) * 1440 / 820)}
+    .fig.rot.arch{aspect-ratio:860 / 1440}
+    .fig.rot.arch img{width:calc((100vw - 36px) * 1440 / 860)}
+    .rot-hint{display:block; font-size:12.5px; color:var(--text-3); text-align:center; margin-top:10px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important; transition:none!important}
+    .reveal{opacity:1; transform:none}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="ontology·assembly 홈"><b>ontology<i>·</i>assembly</b></a>
+    <nav class="nav-links" aria-label="주요 섹션">
+      <a href="#why">왜 온톨로지</a>
+      <a href="#ontology">관계 형성</a>
+      <a href="#model">모델·쿼리</a>
+      <a href="#scenarios">시나리오</a>
+      <a href="#shots">화면</a>
+      <a href="#architecture">아키텍처</a>
+      <a class="nav-cta" href="https://github.com/Atom-oh/ontology-for-assembly">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span>국회 열린데이터 × AWS 지식그래프</span>
+      <h1 class="hero-title">국회 데이터를<br><em>관계</em>로 읽는다</h1>
+      <p class="hero-sub">의원·의안·표결·위원회·정당을 <b>31 클래스 온톨로지</b>로 모델링하고, 국회 OpenAPI 필드에서 <b>7종 관계</b>를 만들어 Amazon Neptune에 적재합니다. "누가 누구와 함께 발의했고, 정당 노선과 다르게 표결했는가"를 검색이 아니라 <b>관계 탐색</b>으로 답합니다.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#ontology">관계 형성 과정 보기</a>
+        <a class="btn btn-ghost" href="#architecture">아키텍처</a>
+      </div>
+      <div class="metrics num" role="list">
+        <div class="metric" role="listitem"><div class="v">31</div><div class="l">온톨로지 클래스 · 7 그룹</div></div>
+        <div class="metric" role="listitem"><div class="v">7</div><div class="l">real 관계(엣지) 타입</div></div>
+        <div class="metric" role="listitem"><div class="v">74,249</div><div class="l">Neptune real 엣지</div></div>
+        <div class="metric" role="listitem"><div class="v">286</div><div class="l">적재 의원 (Person · 22대)</div></div>
+        <div class="metric" role="listitem"><div class="v">2,098</div><div class="l">의안 (Bill)</div></div>
+        <div class="metric" role="listitem"><div class="v">23</div><div class="l">시연 시나리오 (A–W)</div></div>
+      </div>
+    </div>
+    <figure class="hero-fig">
+      <img src="hero-graph.svg" width="520" height="464" alt="익명 의원 노드 21개가 세 묶음으로 모이고, 공동발의 횟수에 비례한 굵기의 CO_PROPOSED_WITH 엣지로 연결된 공동발의 네트워크 개념도. 묶음 사이는 점선 엣지로 드물게 이어진다." />
+      <figcaption>공동발의 네트워크 개념도 — 엣지 굵기 = <code>count</code>, 노드 크기 = 가중치 합 (예시 · 익명)</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- WHY -->
+<section class="sec alt" id="why">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">Why ontology</div>
+      <h2>관계는 문서 <em>안</em>이 아니라 문서 <em>사이</em>에 있다</h2>
+      <p>텍스트 검색(RAG)은 기사·의안 본문에서 비슷한 문장을 찾는 데 강하지만, 아래 같은 질문은 여러 API의 행(row)을 이어 붙여야 답이 나옵니다. 온톨로지는 그 "이어 붙이는 규칙"을 먼저 정의해 두는 일입니다.</p>
+    </div>
+    <div class="qa reveal">
+      <div class="q"><b>두 의원은 얼마나 가까운가?</b>공동발의 횟수 · 표결 일치율 · 같은 위원회 여부</div>
+      <div class="q"><b>어느 정당이 가장 한 목소리로 표결하나?</b>의원별 표결값 × 소속 정당 다수결</div>
+      <div class="q"><b>법안 협업의 허브는 누구인가?</b>공동발의 네트워크의 가중치 합</div>
+    </div>
+    <div class="pillars">
+      <article class="pillar reveal">
+        <div class="pn">01 · IDENTITY</div>
+        <h3>하나의 식별자로 묶는다</h3>
+        <p>의원 정보·발의·표결 API가 모두 쓰는 <code>MONA_CD</code>(의원 코드)와 <code>BILL_ID</code>(의안 ID)를 노드 키로 삼아, 서로 다른 API의 행을 하나의 Person·Bill 노드로 합칩니다.</p>
+      </article>
+      <article class="pillar reveal">
+        <div class="pn">02 · EDGES AS DATA</div>
+        <h3>관계 자체가 데이터다</h3>
+        <p>표결은 <code>VOTED {value}</code>, 공동발의 네트워크는 <code>CO_PROPOSED_WITH {count}</code>처럼 엣지가 속성을 가집니다. 일치율·응집도·영향력은 이 엣지 속성의 집계입니다.</p>
+      </article>
+      <article class="pillar reveal">
+        <div class="pn">03 · GRAPH + VECTOR</div>
+        <h3>그래프와 검색을 함께</h3>
+        <p>관계는 Neptune(openCypher), 기사 본문은 OpenSearch Serverless(Nori BM25 + Cohere 벡터)에 두고 <code>assembly_id</code>·<code>bill_id</code> 도메인 키로 연결합니다.</p>
+      </article>
+    </div>
+    <div class="stages reveal" aria-label="3단계 진화 비교 (시나리오 B)">
+      <div class="stage"><div class="sn">STAGE 1</div><h3>Chatbot (RAG)</h3><p>비슷한 문서를 찾아 요약 — 관계는 추측</p></div>
+      <div class="stage"><div class="sn">STAGE 2</div><h3>Agent (Tool Use)</h3><p>검색·그래프 도구를 호출해 사실 확인</p></div>
+      <div class="stage"><div class="sn">STAGE 3</div><h3>Agentic AI</h3><p>Planner → Graph → Analyst → Editor 다중 에이전트가 관계를 따라 추론</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ONTOLOGY -->
+<section class="sec" id="ontology">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">How relationships are formed</div>
+      <h2>OpenAPI 필드가 <em>관계</em>가 되는 과정</h2>
+      <p>왼쪽은 국회 열린데이터광장 API가 돌려주는 원천 필드, 가운데는 <code>data/real/*</code> 어댑터의 매핑 규칙, 오른쪽은 그 결과로 Neptune에 생기는 지식그래프입니다. 같은 <code>MONA_CD</code>가 세 API를 하나의 의원 노드로 묶는 것이 출발점입니다.</p>
+    </div>
+    <figure class="fig rot onto reveal">
+      <img src="ontology-relations.svg" width="1440" height="820" loading="lazy"
+           alt="국회 OpenAPI 필드에서 지식그래프 관계로 가는 3단 다이어그램. 국회의원 정보(MONA_CD, POLY_NM, CMIT_NM), 의원 발의법률안(BILL_ID, RST_MONA_CD, PUBL_MONA_CD, COMMITTEE), 본회의 표결정보(BILL_ID, MONA_CD, 표결값) 필드가 KEY·DIRECT·LEAD·SPLIT·JOIN·DERIVE 규칙을 거쳐 BELONGS_TO, MEMBER_OF, PROPOSED, CO_PROPOSED, ASSIGNED_TO, VOTED, 그리고 파생 엣지 CO_PROPOSED_WITH가 된다. 하단에 엣지 범례와 적재된 엣지 수." />
+    </figure>
+    <div class="fig-meta"><span>그림 1 · 필드 → 규칙 → 엣지. 점선 주황은 다른 엣지에서 계산된 파생 엣지.</span><a href="ontology-relations.svg">원본 SVG 열기 · 확대/세션용</a></div>
+    <p class="rot-hint">모바일에서는 다이어그램을 세로로 회전해 표시합니다. 글자가 작으면 위 "원본 SVG 열기"로 확대해 보세요.</p>
+
+    <div class="rules">
+      <div class="rule reveal"><span class="t">KEY</span><h3>노드 식별</h3><p><code>MONA_CD</code>→Person, <code>BILL_ID</code>→Bill. openCypher <code>MERGE</code>로 중복 없이 하나의 노드.</p></div>
+      <div class="rule reveal"><span class="t">DIRECT</span><h3>필드 → 엣지</h3><p>값이 곧 대상 노드: 정당명 <code>POLY_NM</code>, 위원회 <code>CMIT_NM</code>·<code>COMMITTEE</code>.</p></div>
+      <div class="rule reveal"><span class="t">SPLIT</span><h3>목록 → N개 엣지</h3><p><code>PUBL_MONA_CD</code>의 콤마 목록을 나눠 공동발의자마다 엣지 1개.</p></div>
+      <div class="rule reveal"><span class="t">JOIN</span><h3>두 키로 조인</h3><p>표결 행을 (<code>BILL_ID</code>, <code>MONA_CD</code>)로 의원·의안에 연결, 표결값은 엣지 속성.</p></div>
+      <div class="rule d reveal"><span class="t">DERIVE</span><h3>엣지 → 엣지</h3><p>같은 의안의 대표·공동발의자 쌍을 세어 의원↔의원 <code>CO_PROPOSED_WITH {count}</code>.</p></div>
+    </div>
+
+    <table class="edges reveal">
+      <caption>표 1 · Neptune에 적재된 7종 real 관계와 형성 규칙 (22대 국회)</caption>
+      <thead><tr><th scope="col">관계</th><th scope="col">방향</th><th scope="col">원천</th><th scope="col">형성 규칙</th><th scope="col">엣지 수</th></tr></thead>
+      <tbody>
+        <tr><td class="name"><code>PROPOSED</code></td><td class="dir"><span class="lbl">방향</span>Person → Bill</td><td class="src"><span class="lbl">원천</span><code>RST_MONA_CD</code></td><td><span class="lbl">규칙</span>LEAD · 대표발의자 1명</td><td class="count">—</td></tr>
+        <tr><td class="name"><code>CO_PROPOSED</code></td><td class="dir"><span class="lbl">방향</span>Person → Bill</td><td class="src"><span class="lbl">원천</span><code>PUBL_MONA_CD</code></td><td><span class="lbl">규칙</span>SPLIT · 콤마 목록 → 공동발의자별 엣지</td><td class="count">—</td></tr>
+        <tr class="d"><td class="name"><code>CO_PROPOSED_WITH</code></td><td class="dir"><span class="lbl">방향</span>Person ↔ Person</td><td class="src"><span class="lbl">원천</span>파생</td><td><span class="lbl">규칙</span>DERIVE · 같은 의안 발의자(대표+공동) 쌍, <code>{count}</code> 누적</td><td class="count num">19,191</td></tr>
+        <tr><td class="name"><code>VOTED</code></td><td class="dir"><span class="lbl">방향</span>Person → Bill</td><td class="src"><span class="lbl">원천</span>본회의 표결정보</td><td><span class="lbl">규칙</span>JOIN · (BILL_ID, MONA_CD), <code>{value: yes|no|abstain|absent}</code> (찬성·반대·기권·불참)</td><td class="count num">28,528</td></tr>
+        <tr><td class="name"><code>MEMBER_OF</code></td><td class="dir"><span class="lbl">방향</span>Person → Committee</td><td class="src"><span class="lbl">원천</span><code>CMIT_NM</code></td><td><span class="lbl">규칙</span>DIRECT · 의원당 1–3 위원회</td><td class="count">—</td></tr>
+        <tr><td class="name"><code>BELONGS_TO</code></td><td class="dir"><span class="lbl">방향</span>Person → Party</td><td class="src"><span class="lbl">원천</span><code>POLY_NM</code></td><td><span class="lbl">규칙</span>DIRECT · 소속 정당</td><td class="count">—</td></tr>
+        <tr><td class="name"><code>ASSIGNED_TO</code></td><td class="dir"><span class="lbl">방향</span>Bill → Committee</td><td class="src"><span class="lbl">원천</span><code>COMMITTEE</code></td><td><span class="lbl">규칙</span>DIRECT · 소관 위원회</td><td class="count">—</td></tr>
+      </tbody>
+    </table>
+    <p class="fig-meta"><span>합계 74,249 real 엣지 (7 타입). 엣지 수는 저장소 <code>docs/data-sources.md</code>의 Neptune 적재 결과 기준이며, 개별 수치가 공개된 타입만 표기했습니다.</span></p>
+
+    <div class="example reveal" aria-label="의안 한 건이 엣지로 바뀌는 예시">
+      <div>
+        <p class="code-h">입력 · 의원 발의법률안 API 한 행 (예시)</p>
+<pre class="code"><span class="c">// 값은 설명용 예시</span>
+{
+  <span class="k">"BILL_ID"</span>:      <span class="s">"B-001"</span>,
+  <span class="k">"RST_MONA_CD"</span>:  <span class="s">"M-A"</span>,
+  <span class="k">"PUBL_MONA_CD"</span>: <span class="s">"M-B,M-C"</span>,
+  <span class="k">"COMMITTEE"</span>:    <span class="s">"보건복지위원회"</span>
+}</pre>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div>
+        <p class="code-h">출력 · 생성되는 노드와 엣지</p>
+<pre class="code"><span class="c">// KEY</span>
+(:Bill {bill_id:<span class="s">'B-001'</span>})
+<span class="c">// LEAD · SPLIT · DIRECT</span>
+(M-A)-[:<span class="k">PROPOSED</span>]-&gt;(B-001)
+(M-B)-[:<span class="k">CO_PROPOSED</span>]-&gt;(B-001)
+(M-C)-[:<span class="k">CO_PROPOSED</span>]-&gt;(B-001)
+(B-001)-[:<span class="k">ASSIGNED_TO</span>]-&gt;(:Committee)
+<span class="c">// DERIVE · 발의자 쌍마다, 의안 간 누적</span>
+(M-A)-[:<span class="r">CO_PROPOSED_WITH</span> {count:+1}]-(M-B)
+<span class="c">// (M-A,M-C) · (M-B,M-C) 쌍도 동일</span></pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- MODEL -->
+<section class="sec alt" id="model">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">Ontology model</div>
+      <h2>31 클래스 · 7 그룹, 그리고 <em>쿼리</em></h2>
+      <p>모든 노드는 <code>source ∈ {real, synthetic, external}</code> 속성을 가져, 화면과 응답에서 실데이터와 합성 데이터를 구분합니다. 현재 국회 OpenAPI에서 실제 적재되는 클래스는 5개이고, 나머지는 시나리오 시연을 위한 합성·placeholder입니다.</p>
+    </div>
+    <div class="classes reveal">
+      <div class="cg"><h3>인물·조직 (6)</h3><ul><li class="real">Person</li><li class="real">Party</li><li>Staff</li><li class="real">Committee</li><li>District</li><li>Term</li></ul></div>
+      <div class="cg"><h3>입법 (7)</h3><ul><li class="real">Bill</li><li>Law</li><li>Amendment</li><li class="real">Vote</li><li>Statement</li><li>Session</li><li>Budget</li></ul></div>
+      <div class="cg"><h3>주제·외부 (6)</h3><ul><li>Topic</li><li>Policy</li><li>Agency</li><li>Election<wbr>Result</li><li class="ext">PollResult</li><li class="ext">Social<wbr>Signal</li></ul></div>
+      <div class="cg"><h3>미디어 (2)</h3><ul><li>Article</li><li>Tag</li></ul></div>
+      <div class="cg"><h3>독자 측 (5)</h3><ul><li>Reader</li><li>Reader<wbr>Profile</li><li>Subscription<wbr>Tier</li><li>Reading<wbr>Event</li><li>Bookmark</li></ul></div>
+      <div class="cg"><h3>광고 (4)</h3><ul><li>Advertisement</li><li>Ad<wbr>Inventory</li><li>Ad<wbr>Impression</li><li>AdMatch<wbr>Decision</li></ul></div>
+      <div class="cg"><h3>분석 메타 (1)</h3><ul><li>Cluster</li></ul></div>
+    </div>
+    <div class="legend"><span><i class="m-real"></i>real · 국회 OpenAPI 적재 (굵게)</span><span><i class="m-ext"></i>external · 뉴스·여론조사 (◆)</span><span><i class="m-syn"></i>synthetic · 합성 / placeholder (○)</span></div>
+
+    <h3 style="font-size:22px; margin:52px 0 4px" class="reveal">관계가 인사이트가 되는 쿼리</h3>
+    <p style="margin:0; color:var(--text-2); font-size:15.5px" class="reveal">같은 엣지를 다른 모양으로 매칭하면 서로 다른 질문에 답합니다. 모든 Cypher는 사용자 입력을 <code>parameters</code>로만 전달합니다.</p>
+    <div class="queries">
+      <article class="qcard reveal">
+        <h3>표결 일치율</h3>
+        <p>두 의원이 함께 표결한 의안 중 같은 값을 낸 비율 — 시나리오 O</p>
+<pre class="code">MATCH (pa:Person {assembly_id:$a})
+      -[va:<span class="k">VOTED</span>]-&gt;(b:Bill)
+      &lt;-[vb:<span class="k">VOTED</span>]-
+      (pb:Person {assembly_id:$b})
+RETURN count(b),
+  sum(CASE WHEN va.value = vb.value
+      THEN 1 ELSE 0 END)</pre>
+        <div class="src">api/routers/relations.py</div>
+      </article>
+      <article class="qcard reveal">
+        <h3>정당 응집도</h3>
+        <p>의안별 정당 다수결과 같은 표결의 비율 — 시나리오 T</p>
+<pre class="code">MATCH (p:Person)-[v:<span class="k">VOTED</span>]-&gt;(b:Bill)
+OPTIONAL MATCH
+  (p)-[:<span class="k">BELONGS_TO</span>]-&gt;(pa:Party)
+RETURN p.assembly_id, pa.name,
+       v.value, b.bill_id
+<span class="c">// 정당×의안 다수결 집계</span></pre>
+        <div class="src">api/routers/insights_advanced.py</div>
+      </article>
+      <article class="qcard reveal">
+        <h3>협업 영향력</h3>
+        <p>공동발의 네트워크 가중치 합으로 허브 의원 — 시나리오 U</p>
+<pre class="code">MATCH (p:Person)
+  -[r:<span class="r">CO_PROPOSED_WITH</span>]-(:Person)
+WITH p, sum(r.count) AS cohort_weight
+ORDER BY cohort_weight DESC
+LIMIT $cap
+RETURN p.assembly_id, cohort_weight</pre>
+        <div class="src">api/routers/insights_advanced.py</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- SCENARIOS -->
+<section class="sec" id="scenarios">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">Scenarios on the graph</div>
+      <h2>같은 그래프, <em>여섯 가지</em> 질문</h2>
+      <p>23개 시연 시나리오(A–W) 중 실데이터 엣지를 직접 순회하는 대표 시나리오입니다. 편집국·데이터·광고·독자·구독자·B2B 6개 페르소나가 같은 그래프를 각자의 KPI로 봅니다.</p>
+    </div>
+    <div class="feat-grid">
+      <article class="feat reveal"><span class="code-tag">O</span><h3>인물 관계 분석</h3><p>두 의원 사이의 공동발의 횟수, 공유 의안, 표결 일치율, 공통 위원회를 한 화면에서 비교합니다.</p><span class="uses">CO_PROPOSED_WITH · VOTED · MEMBER_OF</span></article>
+      <article class="feat reveal"><span class="code-tag">T</span><h3>정당 응집도</h3><p>22대 국회 정당별로 의원 표결이 정당 다수결과 얼마나 일치하는지 순위로 보여줍니다.</p><span class="uses">VOTED · BELONGS_TO</span></article>
+      <article class="feat reveal"><span class="code-tag">U</span><h3>의원 영향력 랭킹</h3><p>공동발의 네트워크 가중치와 발의 활동으로 법안 협업의 허브를 찾습니다.</p><span class="uses">CO_PROPOSED_WITH · PROPOSED · CO_PROPOSED</span></article>
+      <article class="feat reveal"><span class="code-tag">V</span><h3>표결 cluster</h3><p>정당 계열과 의원별 찬성률 패턴으로 의원을 분류해 표결 성향의 분포를 보여줍니다.</p><span class="uses">VOTED · BELONGS_TO</span></article>
+      <article class="feat reveal"><span class="code-tag">W</span><h3>Swing voter</h3><p>소속 정당 다수결과 다르게 표결한 비율이 높은 의원을 찾아 취재 단서로 제공합니다.</p><span class="uses">VOTED · BELONGS_TO</span></article>
+      <article class="feat reveal"><span class="code-tag">A</span><h3>의미 검색 + 1-hop</h3><p>Nori BM25와 Cohere 벡터 KNN을 hybrid query로 결합해 검색한 뒤, 최상위 결과를 관계 그래프로 펼칩니다.</p><span class="uses">OpenSearch → 1-hop subgraph</span></article>
+    </div>
+  </div>
+</section>
+
+<!-- SHOTS -->
+<section class="sec alt" id="shots">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">Product</div>
+      <h2>실제 화면</h2>
+      <p>데모 화면입니다. 화면 상단의 <b>REAL</b> 배지가 붙은 지표는 22대 국회 OpenAPI에서 적재한 엣지를 Neptune에서 직접 질의한 결과이고, 그 밖의 활동 지표·토픽·일부 노드는 시연용 합성 데이터입니다.</p>
+    </div>
+    <div class="shots">
+      <figure class="shot wide reveal">
+        <a href="screenshots/relations.webp" aria-label="원본 크기로 보기"><img src="screenshots/relations.webp" width="1400" height="788" loading="lazy" alt="두 의원을 선택해 공동발의 1건, 표결 일치율 16%, 토픽 중첩 10%, cross-party 관계 강도와 관계 narrative를 보여주는 인물 관계 분석 화면" /></a>
+        <figcaption><b>O · 인물 관계 분석</b> — 공동발의·표결 일치율은 Neptune real 엣지(CO_PROPOSED_WITH · VOTED · MEMBER_OF), 합성 지표는 가림 처리</figcaption>
+      </figure>
+      <figure class="shot reveal">
+        <a href="screenshots/party-cohesion.webp" aria-label="원본 크기로 보기"><img src="screenshots/party-cohesion.webp" width="1400" height="788" loading="lazy" alt="8개 정당, 286명 의원 기준 전체 응집도와 정당별 응집도 순위 막대를 보여주는 정당 응집도 화면" /></a>
+        <figcaption><b>T · 정당 응집도</b> — real VOTED × BELONGS_TO</figcaption>
+      </figure>
+      <figure class="shot reveal">
+        <a href="screenshots/object-explorer.webp" aria-label="원본 크기로 보기"><img src="screenshots/object-explorer.webp" width="1400" height="788" loading="lazy" alt="인물·조직, 입법, 주제·외부, 미디어, 독자 그룹별로 31개 온톨로지 클래스와 필드 수를 나열한 Object Explorer 화면" /></a>
+        <figcaption><b>Object Explorer</b> — 31 클래스 카탈로그</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="sec" id="architecture">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">Architecture</div>
+      <h2>온톨로지 계층을 <em>중심</em>에 둔 AWS 구성</h2>
+      <p>웹·API 트래픽의 진입점은 CloudFront 하나이고, VPC origin으로 internal ALB에 연결됩니다. API는 Neptune 온톨로지 계층을 openCypher로 질의하고, 검색과 생성은 OpenSearch Serverless와 Amazon Bedrock이 맡습니다.</p>
+    </div>
+    <figure class="fig rot arch reveal">
+      <img src="assembly-arch.svg" width="1440" height="860" loading="lazy"
+           alt="AWS 아키텍처. 6 페르소나 사용자가 CloudFront로 접속하고 VPC origin을 통해 private subnet의 internal ALB로 들어가 web(Next.js)과 api(FastAPI) Fargate 서비스로 라우팅된다. api는 중앙의 Ontology layer인 Amazon Neptune에 openCypher로 질의하며, Bedrock(모델·Guardrails), DynamoDB, OpenSearch Serverless를 사용한다. 하단 적재 파이프라인은 국회 OpenAPI와 네이버 뉴스 데이터를 ECS one-shot task가 S3 NDJSON으로 저장한 뒤 Neptune과 OpenSearch에 적재한다." />
+    </figure>
+    <div class="fig-meta"><span>그림 2 · 6 CDK 스택: network · data · ai · compute · edge · observability</span><a href="assembly-arch.svg">원본 SVG 열기 · 확대/세션용</a></div>
+    <p class="rot-hint">모바일에서는 다이어그램을 세로로 회전해 표시합니다. 글자가 작으면 위 "원본 SVG 열기"로 확대해 보세요.</p>
+    <div class="arch-notes">
+      <div class="an reveal"><h3>Edge</h3><p>CloudFront → VPC origin → internal ALB. 인터넷에 노출된 로드밸런서가 없습니다.</p></div>
+      <div class="an reveal"><h3>Compute</h3><p>ECS Fargate ARM64 web·api 각 2 task. <code>/api/*</code>는 FastAPI, 나머지는 Next.js.</p></div>
+      <div class="an reveal"><h3>Ontology layer</h3><p>Neptune(isolated subnet)에 7종 real 엣지. OpenSearch와 도메인 키를 공유합니다.</p></div>
+      <div class="an reveal"><h3>Ingestion</h3><p>같은 API 이미지가 one-shot task로 <code>data.load</code> 실행 → S3 NDJSON → <code>UNWIND … MERGE</code>.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="sec alt" id="trust">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">Trust &amp; neutrality</div>
+      <h2>정치 데이터를 다루는 <em>원칙</em></h2>
+    </div>
+    <div class="trust">
+      <ul class="tlist">
+        <li class="reveal"><b>Bedrock Guardrail</b>혐오·모욕·비위 필터와 정당 공격·정치인 모욕 금지 토픽을 LLM 입력과 출력 양쪽에 적용합니다.</li>
+        <li class="reveal"><b>political_balance_score</b>LLM 응답마다 균형 점수를 첨부해, 한쪽 정당만 부각되면 UI가 경고합니다.</li>
+        <li class="reveal"><b>정치 성향 추론 필드 금지</b>독자의 정치 성향 같은 추론 필드는 스키마 단계에서 생성·저장을 막고, 독자 ID는 솔티드 해시로 익명화합니다.</li>
+        <li class="reveal"><b>출처 라벨</b>모든 노드와 응답에 real · synthetic · external 출처를 붙여, 실데이터와 합성 데이터를 구분해 표시합니다.</li>
+      </ul>
+      <div class="stack reveal">
+        <div class="row"><div class="rl">Graph &amp; search</div><div class="chips"><span class="chip">Amazon Neptune · openCypher</span><span class="chip">OpenSearch Serverless · Nori</span><span class="chip">Cohere embed-v4</span></div></div>
+        <div class="row"><div class="rl">AI</div><div class="chips"><span class="chip">Bedrock · Claude Sonnet 4.6</span><span class="chip">Bedrock Guardrails</span><span class="chip">Planner→Graph→Analyst→Editor 다중 에이전트</span></div></div>
+        <div class="row"><div class="rl">App &amp; infra</div><div class="chips"><span class="chip">FastAPI · Python 3.12</span><span class="chip">Next.js 14</span><span class="chip">ECS Fargate ARM64</span><span class="chip">CloudFront VPC origin</span><span class="chip">Cognito</span><span class="chip">DynamoDB</span><span class="chip">AWS CDK v2</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="wrap">
+    <h2 class="reveal">관계를 따라가면 <em>기사</em>가 보입니다</h2>
+    <p class="reveal">온톨로지 설계, OpenAPI 어댑터, Cypher 쿼리, CDK 인프라까지 전부 공개되어 있습니다. 저장소에서 구조를 확인하고 데모에서 직접 관계를 펼쳐 보세요.</p>
+    <div class="hero-actions reveal">
+      <a class="btn btn-primary" href="https://github.com/Atom-oh/ontology-for-assembly">GitHub 저장소</a>
+      <a class="btn btn-ghost" href="https://assembly.whchoi.net/mindmap">데모에서 관계 그래프 열기</a>
+    </div>
+    <p class="reveal" style="font-size:14px; color:var(--text-3); margin-top:22px">공개 데모의 LLM 응답·검색은 결정적 fixture로 동작하며, REAL 시나리오(O·T·U·V·W)의 그래프 쿼리는 실제 Neptune에서 실행됩니다.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>ontology·assembly — 언론사 대상 Agentic AI + 지식그래프 PoC</span>
+    <span>데이터: <a href="https://open.assembly.go.kr">국회 열린데이터광장</a> 공공 OpenAPI (22대 국회) · 수치는 저장소 문서의 적재 결과 기준 · 화면 속 의원 사진 출처: 국회</span>
+    <span>국회와 무관한 비공식 기술 데모(PoC)이며, 합성 지표는 실제 의정활동 평가가 아닙니다.</span>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !('IntersectionObserver' in window)) { els.forEach(function(e){ e.classList.add('in'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, {rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(e){ io.observe(e); });
+  })();
+</script>
+</body>
+</html>
